@@ -20,36 +20,29 @@ clean-targets:         # directories to be removed by `dbt clean`
 
 # Configurează materializarea default și schemele pentru diferite subdirectoare
 models:
-  dbt_real_estate_project: # Numele proiectului tău
-    # Configurații globale pentru toate modelele din proiect
-    # +materialized: view # Poți seta o materializare default (view, table, incremental)
-
+  dbt_real_estate_project:
     staging:
-      # Configurații pentru modelele din models/staging/
-      +schema: RAW_STAGING # Modelele de staging merg în schema RAW_STAGING
-      +materialized: view # Staging-urile sunt de obicei view-uri
-      elementix: # Pentru models/staging/elementix/
+      +schema: RAW_STAGING
+      +materialized: view
+      elementix:
         +tags: "elementix_source"
-      financial: # Pentru models/staging/financial/ (vom crea mai târziu)
-        +tags: "financial_source"
+        # financial: # Comentat sau șters pentru moment
+        #   +tags: "financial_source"
 
     intermediate:
-      # Configurații pentru modelele din models/intermediate/
-      +schema: RAW_STAGING # Sau o schemă separată ANALYTICS_STAGING dacă vrei
-      +materialized: ephemeral # Sau view/table dacă sunt complexe și refolosite des
-                              # Ephemeral nu persistă în DB, e doar un CTE
+      +schema: RAW_STAGING 
+      +materialized: ephemeral
       elementix:
         +tags: "elementix_int"
-      financial:
-        +tags: "financial_int"
+        # financial: # Comentat sau șters pentru moment
+        #   +tags: "financial_int"
 
     marts:
-      # Configurații pentru modelele din models/marts/
-      +schema: ANALYTICS # Modelele de mart merg în schema ANALYTICS
-      +materialized: table # Mart-urile sunt de obicei tabele
+      +schema: ANALYTICS
+      +materialized: table
       elementix:
         +tags: "elementix_mart"
-      financial:
-        +tags: "financial_mart"
-      combined:
-        +tags: "combined_mart"
+        # financial: # Comentat sau șters pentru moment
+        #   +tags: "financial_mart"
+        # combined: # Comentat sau șters pentru moment
+        #   +tags: "combined_mart"

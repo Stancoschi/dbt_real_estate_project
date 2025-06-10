@@ -1,0 +1,41 @@
+# models/staging/elementix/sources_elementix.yml
+version: 2
+
+sources:
+  - name: elementix_deed_mortgage # Un nume logic pentru această sursă în dbt
+    description: "Source data from Elementix Deed and Mortgage Intelligence marketplace listing."
+    # Baza de date și schema unde se află datele Elementix în Snowflake
+    database: DEED_AND_MORTGAGE_INTELLIGENCE   # !!! ÎNLOCUIEȘTE ACEST NUME !!!
+    schema: public # !!! ÎNLOCUIEȘTE ACEST NUME (ex: PUBLIC) !!!
+    
+    # O listă a tabelelor pe care le vom folosi din această sursă
+    tables:
+      - name: ADDRESSES # Numele tabelului așa cum apare în Snowflake
+        identifier: ADDRESSES # Poți omite 'identifier' dacă 'name' e identic cu cel din DB
+        description: "Contains address details."
+        # Poți adăuga și coloane aici dacă vrei să le documentezi/testezi la nivel de sursă
+        # columns:
+        #   - name: ID
+        #     description: "Primary key for addresses."
+        #     tests:
+        #       - unique
+        #       - not_null
+
+      - name: LENDERS
+        description: "Information about lending institutions."
+
+      - name: MORTGAGES
+        description: "Core table containing mortgage transaction details."
+        # Pentru a testa "freshness" (cât de recente sunt datele)
+        # loaded_at_field: "_LOADED_AT" # !!! VERIFICĂ DACĂ EXISTĂ O ASTFEL DE COLOANĂ ÎN TABELUL MORTGAGES !!!
+                                     # Aceasta este o coloană pe care unii furnizori o adaugă
+                                     # pentru a indica data ultimei încărcări. Dacă nu există, șterge linia.
+        # freshness: # Definește așteptările tale privind prospețimea datelor
+        #   warn_after: {count: 24, period: hour} # Avertizează dacă datele sunt mai vechi de 24h
+        #   error_after: {count: 48, period: hour} # Eroare dacă sunt mai vechi de 48h
+
+      - name: PERSONS
+        description: "Information about individuals or entities involved."
+
+      - name: SIGNERS
+        description: "Details about signers on documents."
