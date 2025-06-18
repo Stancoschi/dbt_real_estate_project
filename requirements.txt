@@ -1,4 +1,4 @@
 # requirements.txt
 dbt-snowflake==1.5.0
-dbt-expectations
-dbt-utils
+dbt-expectations==0.10.6
+dbt-utils==1.3.0
