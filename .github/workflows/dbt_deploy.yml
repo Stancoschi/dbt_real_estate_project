@@ -35,7 +35,7 @@ jobs:
       - name: Install dbt and adapter
         run: |
           pip install dbt-snowflake==1.5.0 # Folosește o versiune specifică pentru consistență
-          pip install dbt-expectations dbt-utils # Instalează și pachetele
+         
 
       - name: Create dbt profiles.yml
         # Generează profiles.yml dinamic folosind variabilele de mediu
