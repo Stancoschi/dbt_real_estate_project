@@ -1,76 +1,71 @@
-# This workflow automates the CI/CD process for the dbt project.
-# It triggers on pushes to the main branch and also runs on a daily schedule.
-name: dbt CI/CD
+# .github/workflows/dbt_deploy.yml
+name: dbt CI/CD on Main Branch
 
 on:
   push:
     branches:
-      - main
-      - master
-  pull_request: # It's a good practice to run tests on Pull Requests as well.
-    branches:
-      - main
-      - master
-  schedule:
-    # Runs every day at 5:00 AM UTC.
-    - cron: '0 5 * * *'
-
+      - main  # Rulează la fiecare push pe ramura 'main'
+      - master # Sau 'master' dacă folosești acest nume
+    schedule:
+    # Rulează în fiecare zi la ora 5:00 AM UTC
+      - cron: '10 * * * *'
+      #- cron: '0 5 * * *'
 jobs:
-  dbt_run_and_test:
-    name: Run and Test dbt Models
+  run_dbt_models:
     runs-on: ubuntu-latest
     
+    # Variabile de mediu pentru dbt, folosind secretele GitHub
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      # Schema este hardcodată, dbt o va folosi ca default
+      SNOWFLAKE_SCHEMA: RAW_STAGING 
+
     steps:
-      - name: Check out the repository
+      - name: Check out repository
         uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10' # Using a more recent, stable version of Python.
+          python-version: '3.9' # Alege o versiune compatibilă
+          cache: 'pip'
 
       - name: Install dbt and adapter
-        # Pinning the version ensures consistent and predictable runs.
-        # It's good practice to align this with your local development version.
-        run: pip install dbt-snowflake==1.8.0 
+        run: |
+          pip install dbt-snowflake==1.5.0 # Folosește o versiune specifică pentru consistență
+         
 
-      - name: Install dbt packages/dependencies
-        # This command reads `packages.yml` and installs necessary packages like dbt_utils.
-        run: dbt deps --profiles-dir .github # Point to the directory containing profiles.yml
-        env:
-          # Define environment variables that will populate profiles.yml
-          # These values are securely fetched from GitHub Secrets.
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ROLE: 'ETL_USER' # Use the dedicated role for automation.
-          SNOWFLAKE_DATABASE: 'DBT_REAL_ESTATE_PROJECT_DB'
-          SNOWFLAKE_WAREHOUSE: 'COMPUTE_WH'
-          # This schema is a default; dbt will use schemas defined in your project config.
-          SNOWFLAKE_SCHEMA: 'ANALYTICS' 
+      - name: Create dbt profiles.yml
+        # Generează profiles.yml dinamic folosind variabilele de mediu
+        # Nu este nevoie să ai un fișier profiles.yml în repository
+        run: |
+          mkdir -p ~/.dbt/
+          echo """
+          dbt_real_estate_project:
+            target: dev
+            outputs:
+              dev:
+                type: snowflake
+                account: $SNOWFLAKE_ACCOUNT
+                user: $SNOWFLAKE_USER
+                password: $SNOWFLAKE_PASSWORD
+                role: $SNOWFLAKE_ROLE
+                warehouse: $SNOWFLAKE_WAREHOUSE
+                database: $SNOWFLAKE_DATABASE
+                schema: $SNOWFLAKE_SCHEMA
+                threads: 4
+          """ > ~/.dbt/profiles.yml
+
+      - name: Install dbt dependencies
+        run: dbt deps
 
       - name: Run dbt models
-        # This command will build all models in the project.
-        # On the scheduled run, this will execute the incremental logic.
-        run: dbt run --profiles-dir .github
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ROLE: 'ETL_USER'
-          SNOWFLAKE_DATABASE: 'DBT_REAL_ESTATE_PROJECT_DB'
-          SNOWFLAKE_WAREHOUSE: 'COMPUTE_WH'
-          SNOWFLAKE_SCHEMA: 'ANALYTICS'
+        run: dbt run
 
       - name: Test dbt models
-        # This command runs all tests defined in your project.
-        # If any test fails, the entire workflow will fail, preventing a bad deployment.
-        run: dbt test --profiles-dir .github
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_ROLE: 'ETL_USER'
-          SNOWFLAKE_DATABASE: 'DBT_REAL_ESTATE_PROJECT_DB'
-          SNOWFLAKE_WAREHOUSE: 'COMPUTE_WH'
-          SNOWFLAKE_SCHEMA: 'ANALYTICS'
+        run: dbt test
