@@ -24,7 +24,7 @@ This dataset was chosen for several key reasons that make it ideal for a compreh
 
 The project follows a modern, layered data modeling approach to ensure scalability, maintainability, and data quality.
 
-![Analytics Schema ERD](ERD_Diagram.png) 
+![Analytics Schema ERD](Deliverables/Deliverable%202/ERD_Analytics_Schema.png) 
 
 
 ### Schema Layers
