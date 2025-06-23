@@ -36,7 +36,7 @@ flattened_property_addresses AS (
 )
 
 -- Join the flattened address IDs with the full address details to enrich the data.
-SELECT
+SELECT DISTINCT
     fpa.mortgage_id,
     fpa.property_address_id,
     sa.full_address AS property_full_address,
