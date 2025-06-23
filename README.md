@@ -24,7 +24,7 @@ This dataset was chosen for several key reasons that make it ideal for a compreh
 
 The project follows a modern, layered data modeling approach to ensure scalability, maintainability, and data quality.
 
-![Analytics Schema ERD](Deliverables/Deliverable%202/ERD_Analytics_Schema.png) 
+![Analytics Schema ERD](Deliverables/Deliverable_2/ERD_Diagram.png) 
 
 
 ### Schema Layers
@@ -118,4 +118,4 @@ The data is processed through three distinct layers within Snowflake:
 A BI dashboard was created in Snowsight to visualize the key metrics from the `fct_elementix_monthly_mortgage_activity` table. It provides insights into market trends, geographic activity, and loan type distribution.
 
 
-![Snowsight Dashboard](Snowflake_Dashboard.png)
+![Snowsight Dashboard](Deliverables/Deliverable_5/Snowflake_Dashboard.png)
