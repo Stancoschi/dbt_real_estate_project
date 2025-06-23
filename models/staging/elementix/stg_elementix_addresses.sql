@@ -1,15 +1,18 @@
--- models/staging/elementix/stg_elementix_addresses.sql
+-- This staging model cleans and standardizes the raw address data.
+-- It performs basic transformations like column renaming, type casting,
+-- and simple data cleaning to prepare the data for downstream models.
+
 WITH source_data AS (
-    -- Referențiem sursa 'ADDRESSES' din 'elementix_deed_mortgage'
-    -- așa cum am definit-o în sources_elementix.yml
+    -- Select directly from the source table defined in `sources.yml`.
     SELECT * FROM {{ source('elementix_deed_mortgage', 'ADDRESSES') }}
 )
+
 SELECT
-    -- Chei și Identificatori
-    ID AS address_id,         -- Redenumire și presupunem că este cheia primară
+    -- Keys and Identifiers
+    ID AS address_id, -- Rename for clarity and consistency. This is the primary key.
     REGION_ID AS region_id,
 
-    -- Detalii Adresă
+    -- Address Details
     ADDRESS_FULL AS full_address,
     ADDRESS_SHORT AS short_address,
     STREET_NUMBER AS street_number,
@@ -17,23 +20,23 @@ SELECT
     STREET_NAME AS street_name,
     STREET_NAME_POST_TYPE AS street_name_post_type,
     STREET_NAME_POST_DIRECTIONAL AS street_name_post_directional,
-    UNIT AS unit_number, -- Redenumire pentru claritate
+    UNIT AS unit_number,
     CITY AS city,
     COUNTY AS county_name,
-    STATE AS state_code,       -- Presupunem că e codul statului (ex: 'CA', 'NY')
-    CASE 
-        WHEN zip_code IS NULL OR TRIM(zip_code) = '' THEN NULL
-        ELSE zip_code
-    END AS zip_code,
+    STATE AS state_code,
 
-    -- Coordonate Geografice (important să verificăm tipul de date sursă)
-    -- Dacă sunt VARCHAR, vom folosi TRY_CAST la NUMBER. Dacă sunt deja NUMBER, putem omite CAST-ul.
-    LATITUDE AS latitude,   -- Ajustează precizia/scala dacă e nevoie
-    LONGITUDE AS longitude  -- Ajustează precizia/scala dacă e nevoie
+    -- Clean the zip_code field by standardizing empty strings to NULL.
+    NULLIF(TRIM(zip_code), '') AS zip_code,
 
-    -- Adaugă aici orice alte coloane din ADDRESSES pe care le consideri utile
-    -- Ex: _LOADED_AT AS loaded_at -- Dacă sursa are o astfel de coloană
+    -- Geographic Coordinates
+    -- No explicit casting is needed here if the source types are already numeric.
+    -- If they were text, TRY_CAST(latitude AS NUMBER(10, 7)) would be appropriate.
+    LATITUDE AS latitude,
+    LONGITUDE AS longitude
+
 FROM source_data
-WHERE zip_code IS NOT NULL AND LENGTH(TRIM(zip_code)) BETWEEN 5 AND 10 -- Asigură-te că ZIP_CODE nu este NULL
--- Poți adăuga un WHERE aici dacă vrei să filtrezi înregistrările la nivel de staging
--- Ex: WHERE ID IS NOT NULL
+-- Basic filtering at the staging level to remove records with invalid zip codes.
+-- This improves data quality for all downstream models.
+WHERE zip_code IS NOT NULL
+  AND LENGTH(TRIM(zip_code)) BETWEEN 5 AND 10 -- Allows for 5-digit and ZIP+4 formats.
+  AND address_id IS NOT NULL -- Ensure primary key exists.

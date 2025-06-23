@@ -1,12 +1,17 @@
--- models/intermediate/elementix/int_elementix_mortgage_property_addresses.sql
+-- This model unnests the property_address_ids_array from each mortgage.
+-- The purpose is to create a link table that maps each mortgage to every single
+-- property it covers, which is crucial for analyzing blanket loans or property portfolios.
+
 WITH stg_mortgages AS (
+    -- Select only the mortgage ID and the array of address IDs to be unnested.
     SELECT
         mortgage_id,
-        property_address_ids_array -- Coloana ARRAY cu ID-urile adreselor
+        property_address_ids_array
     FROM {{ ref('stg_elementix_mortgages') }}
 ),
 
 stg_addresses AS (
+    -- Select all descriptive attributes for each address.
     SELECT
         address_id,
         full_address,
@@ -19,19 +24,18 @@ stg_addresses AS (
     FROM {{ ref('stg_elementix_addresses') }}
 ),
 
--- Aplatizează array-ul de ID-uri de adrese din ipoteci
--- Funcția FLATTEN din Snowflake este folosită aici.
--- Pentru fiecare mortgage_id, va crea un rând pentru fiecare element din property_address_ids_array.
+-- Use LATERAL FLATTEN to transform the nested array of address IDs into a flat,
+-- tabular structure. This creates a distinct row for each address associated with a mortgage.
 flattened_property_addresses AS (
     SELECT
         m.mortgage_id,
-        f.value::VARCHAR AS property_address_id -- Extragem valoarea din array (ID-ul adresei)
-                                                -- și o castăm la VARCHAR (sau tipul ID-ului adresei)
+        f.value::VARCHAR AS property_address_id
     FROM stg_mortgages m,
     LATERAL FLATTEN(input => m.property_address_ids_array) f
-    WHERE f.value IS NOT NULL -- Ignorăm ID-urile nule din array, dacă există
+    WHERE f.value IS NOT NULL -- Ensure we don't process any null IDs that might be in the array.
 )
--- Unim cu detaliile adresei
+
+-- Join the flattened address IDs with the full address details to enrich the data.
 SELECT
     fpa.mortgage_id,
     fpa.property_address_id,

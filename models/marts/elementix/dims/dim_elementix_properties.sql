@@ -1,7 +1,13 @@
--- models/marts/elementix/dims/dim_elementix_properties.sql
+-- This model creates the property dimension table.
+-- Each record represents a unique physical property address from the dataset,
+-- providing detailed geographical and descriptive attributes.
+
 WITH stg_addresses AS (
+    -- Select all address attributes from the staging layer.
+    -- The primary key `address_id` is aliased to `property_id` for clarity
+    -- within the context of a property-centric dimension.
     SELECT
-        address_id AS property_id, -- Redenumim pentru claritate în contextul dimensiunii
+        address_id AS property_id,
         full_address,
         short_address,
         street_number,
@@ -16,6 +22,7 @@ WITH stg_addresses AS (
         region_id
     FROM {{ ref('stg_elementix_addresses') }}
 )
+
 SELECT
     property_id,
     full_address,
@@ -31,6 +38,7 @@ SELECT
     longitude,
     region_id
 FROM stg_addresses
-WHERE property_id IS NOT NULL -- Asigură unicitatea și validitatea
--- Deoarece stg_elementix_addresses.address_id este deja testat ca unic și not_null,
--- un SELECT DISTINCT nu ar trebui să fie necesar aici dacă sursa e curată.
+WHERE property_id IS NOT NULL
+-- NOTE: A `SELECT DISTINCT` is not used here because the `address_id`
+-- from the staging layer is already tested for uniqueness. This assumes
+-- clean source data and improves performance by avoiding an unnecessary operation.
