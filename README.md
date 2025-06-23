@@ -84,8 +84,8 @@ The data is processed through three distinct layers within Snowflake:
 ### Setup
 1.  **Clone the repository:**
     ```bash
-    git clone [your-repo-url]
-    cd [your-repo-name]
+    git clone https://github.com/Stancoschi/dbt_real_estate_project.git
+    cd dbt_real_estate_project
     ```
 2.  **Install dbt and the Snowflake adapter:**
     ```bash
