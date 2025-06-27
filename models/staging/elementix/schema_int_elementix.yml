@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: int_elementix_mortgages_enriched
+    description: "Enriched mortgage data, one row per mortgage, joined with lender and primary borrower address details."
+    columns:
+      - name: mortgage_id
+        tests:
+          - unique 
+          - not_null
+      - name: lender_id
+        tests:
+          - not_null
+      - name: recording_month
+        tests:
+          - not_null

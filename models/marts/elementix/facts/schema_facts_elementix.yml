@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: fct_elementix_monthly_mortgage_activity
+    description: "Monthly aggregated mortgage activity by state, county, and lender type."
+    tests:
+      # Ensure that the total mortgage amount is non-negative
+      - dbt_utils.expression_is_true:
+          expression: "total_mortgage_amount >= 0"
+    columns:
+      - name: recording_month
+        tests:
+          - not_null
+      - name: property_state_code
+        tests:
+          - not_null
+      - name: num_mortgages
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0

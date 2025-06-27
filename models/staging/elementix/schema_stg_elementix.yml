@@ -1,0 +1,128 @@
+version: 2
+
+models:
+  - name: stg_elementix_addresses
+    description: "Staging model for Elementix addresses. Cleansed and standardized address data."
+    columns:
+      - name: address_id
+        description: "Unique identifier for each address. Derived from source ID."
+        tests:
+          - unique
+          - not_null
+      - name: state_code
+        description: "Two-letter state code."
+        tests:
+          - dbt_expectations.expect_column_value_lengths_to_be_between: # Necesită dbt-utils
+              min_value: 2
+              max_value: 2
+              
+      - name: zip_code
+        description: "Zip code for the address."
+        tests:
+          - dbt_expectations.expect_column_value_lengths_to_be_between: # Can be 5 or 9 (ZIP+4)
+              min_value: 5
+              max_value: 10 # Allows the ZIP+4 format 'NNNNN-NNNN'
+              
+      - name: latitude
+        description: "Latitude of the address."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -90
+              max_value: 90
+      - name: longitude
+        description: "Longitude of the address."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: -180
+              max_value: 180
+
+  - name: stg_elementix_lenders
+    description: "Staging model for Elementix lenders."
+    columns:
+      - name: lender_id
+        description: "Unique identifier for each lender."
+        tests:
+          - unique
+          - not_null
+      - name: lender_name
+        description: "Name of the lending institution."
+        tests:
+          - not_null
+
+  - name: stg_elementix_mortgages
+    description: "Staging model for Elementix mortgage transactions."
+    columns:
+      - name: mortgage_id
+        description: "Unique identifier for the mortgage transaction."
+        tests:
+          - unique
+          - not_null
+      - name: lender_id
+        description: "Foreign key to the stg_elementix_lenders model."
+        tests:
+          - not_null
+          - relationships: # Test de integritate referențială
+              to: ref('stg_elementix_lenders')
+              field: lender_id
+              
+      - name: borrower_address_id
+        description: "Foreign key to the stg_elementix_addresses model for the borrower's primary property address."
+        tests:
+          
+          
+          - relationships:
+              to: ref('stg_elementix_addresses')
+              field: address_id
+              severity: warn
+      - name: recording_date
+        description: "Date the mortgage was recorded. Should always be present for analysis."
+        tests:
+          - not_null
+      - name: mortgage_amount
+        description: "The principal amount of the mortgage."
+        tests:
+          - dbt_utils.accepted_range: 
+              min_value: 0 # A mortgage amount cannot be negative
+      - name: loan_term_months
+        description: "The term of the loan in months."
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 2500 # Assuming a maximum term of around 200 years (2400 months)
+      - name: county_state_code
+        description: "State code for the county of the mortgage."
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_value_lengths_to_be_between:
+              min_value: 2
+              max_value: 4
+              
+
+  - name: stg_elementix_persons
+    description: "Staging model for persons/entities involved."
+    columns:
+      - name: person_id
+        description: "Unique identifier for the person/entity."
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_elementix_signers
+    description: "Staging model for signers on documents, focused on mortgages."
+    columns:
+      - name: signer_record_id
+        description: "Unique identifier for this signer record."
+        tests:
+          - unique
+          - not_null
+      - name: mortgage_id
+        description: "Foreign key to the stg_elementix_mortgages model."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_elementix_mortgages')
+              field: mortgage_id
+      - name: signer_full_name_normalized
+        description: "Normalized full name of the signer."
+        tests:
+          - not_null

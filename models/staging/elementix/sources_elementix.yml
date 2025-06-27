@@ -1,0 +1,32 @@
+version: 2
+
+# This file defines the raw data sources for the dbt project.
+# By declaring sources here, we can reference them using the {{ source() }} macro,
+# document their purpose, and even apply source-freshness tests.
+
+
+sources:
+  - name: elementix_deed_mortgage 
+    description: "Source data from Elementix Deed and Mortgage Intelligence marketplace listing."
+
+    # The database where the source data resides in Snowflake.
+    database: DEED_AND_MORTGAGE_INTELLIGENCE 
+    schema: public
+    
+    # List of tables from this source that we will use in our dbt models.
+    tables:
+      - name: ADDRESSES 
+        identifier: ADDRESSES 
+        description: "Contains address details."
+
+      - name: LENDERS
+        description: "Information about lending institutions."
+
+      - name: MORTGAGES
+        description: "Core table containing mortgage transaction details."
+
+      - name: PERSONS
+        description: "Information about individuals or entities involved."
+
+      - name: SIGNERS
+        description: "Details about signers on documents."

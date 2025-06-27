@@ -1,0 +1,70 @@
+# .github/workflows/dbt_deploy.ymlss
+name: dbt CI/CD on Main Branch
+
+on:
+  push:
+    branches:
+      - main  # Rulează la fiecare push pe ramura 'main'
+      - master # Sau 'master' dacă folosești acest nume
+    schedule:
+    # Rulează în fiecare zi la ora 5:00 AM UTC
+      - cron: '0 5 * * *'
+jobs:
+  run_dbt_models:
+    runs-on: ubuntu-latest
+    
+    # Variabile de mediu pentru dbt, folosind secretele GitHub
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
+      SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      # Schema este hardcodată, dbt o va folosi ca default
+      SNOWFLAKE_SCHEMA: RAW_STAGING 
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9' # Alege o versiune compatibilă
+          cache: 'pip'
+
+      - name: Install dbt and adapter
+        run: |
+          pip install dbt-snowflake==1.5.0
+          pip install dbt-expectations dbt-utils
+
+      - name: Create dbt profiles.yml
+        # Generează profiles.yml dinamic folosind variabilele de mediu
+        # Nu este nevoie să ai un fișier profiles.yml în repository
+        run: |
+          mkdir -p ~/.dbt/
+          echo """
+          dbt_real_estate_project:
+            target: dev
+            outputs:
+              dev:
+                type: snowflake
+                account: $SNOWFLAKE_ACCOUNT
+                user: $SNOWFLAKE_USER
+                password: $SNOWFLAKE_PASSWORD
+                role: $SNOWFLAKE_ROLE
+                warehouse: $SNOWFLAKE_WAREHOUSE
+                database: $SNOWFLAKE_DATABASE
+                schema: $SNOWFLAKE_SCHEMA
+                threads: 4
+          """ > ~/.dbt/profiles.yml
+
+      - name: Install dbt dependencies
+        run: dbt deps
+
+      - name: Run dbt models
+        run: dbt run
+
+      - name: Test dbt models
+        run: dbt test
