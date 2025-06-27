@@ -6,7 +6,7 @@ models:
     columns:
       - name: mortgage_id
         tests:
-          - unique # Ar trebui să rămână unic dacă modelul de bază e unic și join-urile sunt 1-la-1 sau 1-la-0
+          - unique 
           - not_null
       - name: lender_id
         tests:

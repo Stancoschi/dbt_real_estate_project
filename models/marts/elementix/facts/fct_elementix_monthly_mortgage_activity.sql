@@ -9,12 +9,10 @@ WITH mortgages_enriched AS (
       AND borrower_state_code IS NOT NULL
 
     {% if is_incremental() %}
-    -- Aici este magia! Acest bloc de cod se execută DOAR la rulările incrementale.
-    -- Filtrăm datele sursă pentru a procesa doar înregistrările noi.
-    -- Presupunem că `recording_date` este coloana care indică "noutatea" datelor.
+    -- If we are running incrementally, we only want to include new records
+    -- that have been recorded after the last date in our existing table.
     AND recording_date > (SELECT MAX(recording_date) FROM {{ this }}) 
-    -- `{{ this }}` se referă la tabelul destinație (fct_elementix... însuși).
-    -- Filtrăm doar ipotecile înregistrate DUPĂ ultima dată de înregistrare din tabelul nostru deja existent.
+    -- `{{ this }}` refers to the current model being built, which is the target table.
     {% endif %}
 ),
 
@@ -23,7 +21,7 @@ dim_date AS (
 )
 
 SELECT
-    -- Aici rămâne aceeași logică de agregare pe care o ai deja
+    -- Primary and Foreign Keys
     me.recording_month, 
     me.borrower_state_code AS property_state_code, 
     me.borrower_county AS property_county,
@@ -34,7 +32,7 @@ SELECT
     me.is_variable_rate,
     me.is_second_mortgage,
     
-    -- Metrici Agregate
+    -- Aggregate Metrics
     COUNT(DISTINCT me.mortgage_id) AS num_mortgages,
     SUM(me.mortgage_amount) AS total_mortgage_amount,
     AVG(me.mortgage_amount) AS avg_mortgage_amount,
@@ -47,7 +45,7 @@ SELECT
     SUM(CASE WHEN me.is_owner_occupied THEN me.mortgage_amount ELSE 0 END) AS total_owner_occupied_amount,
     COUNT(DISTINCT CASE WHEN me.is_owner_occupied THEN me.mortgage_id ELSE NULL END) AS num_owner_occupied_loans,
     
-    -- Adăugăm și cea mai recentă `recording_date` pentru a o folosi în filtrul incremental la următoarea rulare
+    -- Adding the date dimension for time-based analysis
     MAX(me.recording_date) as recording_date
 
 FROM mortgages_enriched me

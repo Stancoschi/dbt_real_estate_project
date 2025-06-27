@@ -1,20 +1,20 @@
-# .github/workflows/dbt_deploy.yml
+
 name: dbt CI/CD on Main Branch
 
 on:
   push:
     branches:
-      - main  # Rulează la fiecare push pe ramura 'main'
-      - master # Sau 'master' dacă folosești acest nume
+      - main  # Runs on every push to the 'main' branch
+      - master # or 'master' 
   schedule:
-  # Rulează în fiecare zi la ora 5:00 AM UTC
+  # Runs daily at 5:00 AM UTC
     - cron: '0 5 * * *'
       #- cron: '0 5 * * *'
 jobs:
   run_dbt_models:
     runs-on: ubuntu-latest
     
-    # Variabile de mediu pentru dbt, folosind secretele GitHub
+    # Environment variables for dbt, using GitHub secrets
     env:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
@@ -22,7 +22,6 @@ jobs:
       SNOWFLAKE_ROLE: ${{ secrets.SNOWFLAKE_ROLE }}
       SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
       SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
-      # Schema este hardcodată, dbt o va folosi ca default
       SNOWFLAKE_SCHEMA: RAW_STAGING 
 
     steps:
@@ -32,7 +31,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9' # Alege o versiune compatibilă
+          python-version: '3.9' 
           cache: 'pip'
 
       - name: Install dbt and adapter
@@ -41,8 +40,8 @@ jobs:
          
 
       - name: Create dbt profiles.yml
-        # Generează profiles.yml dinamic folosind variabilele de mediu
-        # Nu este nevoie să ai un fișier profiles.yml în repository
+        # Generates profiles.yml dynamically using environment variables
+        # No need to have a profiles.yml file in the repository
         run: |
           mkdir -p ~/.dbt/
           echo """

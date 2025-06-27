@@ -1,4 +1,3 @@
-# dbt_project.yml
 
 name: 'dbt_real_estate_project'
 version: '1.0.0'
@@ -18,7 +17,7 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
-# Configurează materializarea default și schemele pentru diferite subdirectoare
+#materializarea default și schemele pentru diferite subdirectoare
 models:
   dbt_real_estate_project:
     staging:
@@ -26,23 +25,16 @@ models:
       +materialized: view
       elementix:
         +tags: "elementix_source"
-        # financial: # Comentat sau șters pentru moment
-        #   +tags: "financial_source"
 
     intermediate:
       +schema: RAW_STAGING 
       +materialized: ephemeral
       elementix:
         +tags: "elementix_int"
-        # financial: # Comentat sau șters pentru moment
-        #   +tags: "financial_int"
+
 
     marts:
       +schema: ANALYTICS
       +materialized: table
       elementix:
         +tags: "elementix_mart"
-        # financial: # Comentat sau șters pentru moment
-        #   +tags: "financial_mart"
-        # combined: # Comentat sau șters pentru moment
-        #   +tags: "combined_mart"

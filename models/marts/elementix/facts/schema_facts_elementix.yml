@@ -4,7 +4,7 @@ models:
   - name: fct_elementix_monthly_mortgage_activity
     description: "Monthly aggregated mortgage activity by state, county, and lender type."
     tests:
-      # Un test singular pentru a verifica dacă total_mortgage_amount e mereu pozitiv
+      # Ensure that the total mortgage amount is non-negative
       - dbt_utils.expression_is_true:
           expression: "total_mortgage_amount >= 0"
     columns:

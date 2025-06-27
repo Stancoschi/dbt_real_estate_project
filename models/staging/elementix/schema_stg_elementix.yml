@@ -16,15 +16,12 @@ models:
               min_value: 2
               max_value: 2
               
-          # Poți adăuga și o listă de valori acceptate dacă știi statele
-          # - accepted_values:
-          #     values: ['AL', 'AK', ..., 'WY'] # Ar fi o listă lungă
       - name: zip_code
         description: "Zip code for the address."
         tests:
-          - dbt_expectations.expect_column_value_lengths_to_be_between: # Poate fi 5 sau 9 (ZIP+4)
+          - dbt_expectations.expect_column_value_lengths_to_be_between: # Can be 5 or 9 (ZIP+4)
               min_value: 5
-              max_value: 10 # Permite și formatul ZIP+4 'NNNNN-NNNN'
+              max_value: 10 # Allows the ZIP+4 format 'NNNNN-NNNN'
               
       - name: latitude
         description: "Latitude of the address."
@@ -67,12 +64,12 @@ models:
           - relationships: # Test de integritate referențială
               to: ref('stg_elementix_lenders')
               field: lender_id
-              # severity: warn # Poți seta ca testul să dea doar avertisment la eșec
+              
       - name: borrower_address_id
         description: "Foreign key to the stg_elementix_addresses model for the borrower's primary property address."
         tests:
           
-          # Nu facem not_null aici, poate fi o ipotecă fără adresă de împrumutat specifică (rar)
+          
           - relationships:
               to: ref('stg_elementix_addresses')
               field: address_id
@@ -84,15 +81,14 @@ models:
       - name: mortgage_amount
         description: "The principal amount of the mortgage."
         tests:
-          - dbt_utils.accepted_range: # Asigură-te că valorile sunt rezonabile
-              min_value: 0 # O ipotecă nu ar trebui să fie negativă
-              # max_value: 1000000000 # Poți seta un prag superior dacă e relevant
+          - dbt_utils.accepted_range: 
+              min_value: 0 # A mortgage amount cannot be negative
       - name: loan_term_months
         description: "The term of the loan in months."
         tests:
           - dbt_utils.accepted_range:
               min_value: 1
-              max_value: 2500 # Ex: 60 ani, un prag superior rezonabil
+              max_value: 2500 # Assuming a maximum term of around 200 years (2400 months)
       - name: county_state_code
         description: "State code for the county of the mortgage."
         tests:
